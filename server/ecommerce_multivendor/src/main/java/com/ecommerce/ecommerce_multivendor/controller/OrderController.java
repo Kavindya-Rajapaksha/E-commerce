@@ -2,6 +2,7 @@ package com.ecommerce.ecommerce_multivendor.controller;
 
 import com.ecommerce.ecommerce_multivendor.domain.PaymentMethod;
 import com.ecommerce.ecommerce_multivendor.entity.*;
+import com.ecommerce.ecommerce_multivendor.repository.PaymentOrderRepository;
 import com.ecommerce.ecommerce_multivendor.response.PaymentLinkResponse;
 import com.ecommerce.ecommerce_multivendor.service.*;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,8 @@ public class OrderController {
     private final CartService cartService;
     private final SellerService sellerService;
     private final SellerReportService sellerReportService;
+    private final PaymentService paymentService;
+    private final PaymentOrderRepository paymentOrderRepository;
 
 
     @PostMapping()
@@ -35,8 +38,15 @@ public class OrderController {
 
         Set<Order>orders = orderService.createOrder(user,shippingAddress,cart);
 
-//        PaymentOrder paymentOrder = paymentService.
+        PaymentOrder paymentOrder = paymentService.createOrder(user,orders);
         PaymentLinkResponse res = new PaymentLinkResponse();
+
+        String paymentUrl = paymentService.createStripePaymentLink(
+                user,
+                paymentOrder.getAmount(),
+                paymentOrder.getId());
+        res.setPayment_link_url(paymentUrl);
+
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
